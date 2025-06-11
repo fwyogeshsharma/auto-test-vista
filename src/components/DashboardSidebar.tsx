@@ -81,9 +81,9 @@ export const DashboardSidebar = ({ currentView, onViewChange }: DashboardSidebar
       <div className="p-4 border-b">
         <div className="flex items-center mb-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">TA</span>
+            <span className="text-white font-bold text-sm">FW</span>
           </div>
-          <span className="ml-2 text-lg font-bold text-gray-900">TestAuto</span>
+          <span className="ml-2 text-lg font-bold text-gray-900">PinTailer</span>
         </div>
         <div className="text-sm text-gray-600">
           <div className="font-medium">Organization: TechCorp</div>

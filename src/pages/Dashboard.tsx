@@ -95,7 +95,7 @@ const Dashboard = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Welcome to TestAuto Platform</CardTitle>
+                <CardTitle>Welcome to PinTailer Platform</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">

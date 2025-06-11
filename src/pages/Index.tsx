@@ -55,9 +55,9 @@ const Index = () => {
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">TA</span>
+                  <span className="text-white font-bold text-sm">FW</span>
                 </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">TestAuto</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">PinTailer</span>
               </div>
               <nav className="hidden md:flex space-x-8">
                 <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Blogs</a>
@@ -162,9 +162,9 @@ const Index = () => {
             <div className="mb-8 md:mb-0">
               <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">TA</span>
+                  <span className="text-white font-bold text-sm">FW</span>
                 </div>
-                <span className="ml-2 text-xl font-bold">TestAuto</span>
+                <span className="ml-2 text-xl font-bold">PinTailer</span>
               </div>
               <p className="text-gray-400 max-w-md">
                 Empowering teams to deliver quality software through intelligent test automation and comprehensive reporting.
@@ -178,7 +178,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 TestAuto. All rights reserved.</p>
+            <p>&copy; 2025 PinTailer. All rights reserved.</p>
           </div>
         </div>
       </footer>
