@@ -25,16 +25,10 @@ interface RegisterUserDetail {
   phoneNumber: string;
 }
 
-// Safely access environment variables with fallbacks
 const identityServiceUrl: string = import.meta.env.VITE_IDENTITY_SERVICE_URL;
 const resourceApiUrl: string = import.meta.env.VITE_RESOURCE_API_URL;
 const pApiUrl: string = import.meta.env.VITE_P_API_URL;
-const appId: string =
-  import.meta.env.VITE_APP_ID ||
-  (import.meta.env.MODE === "development"
-    ? "http://localhost:4200"
-    : "http://localhost:9008");
-
+const isDevelopment: boolean = import.meta.env.MODE === "development";
 
 const AuthenticationService = {
   initSubjects() {
@@ -44,31 +38,108 @@ const AuthenticationService = {
     return { currentUser };
   },
 
+  get appId(): string {
+    const appId = import.meta.env.VITE_APP_ID || "http://localhost:4200";
+    // Fallback to 4200 if 9008 causes issues, to match potential server config
+    return "http://localhost:4200";
+  },
+
   isUserNameExists(username: string): Promise<Message> {
+    console.log("Requesting isUserNameExists:", `${pApiUrl}/isUsernameExists?username=${username}`);
     return axios
-      .get<Message>(`${pApiUrl}/isUsernameExists?username=${username}`)
+      .get<Message>(`${pApiUrl  }/isUsernameExists?username=${username}`)
       .then((response) => ({
         ...response.data,
         message: response.data.message === "true",
       }))
       .catch((error) => {
+        console.error("Error in isUserNameExists:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
         throw new Error("Failed to check username existence");
       });
   },
 
-  accessToken(code: string, code_verifier: string): Promise<TokenDetails> {
-    return axios
-      .post<TokenDetails>(`${identityServiceUrl}/auth/token`, {
-        code,
-        code_verifier,
-        redirect_uri: appId,
-      })
-      .then((response) => response.data)
-      .catch((error) => {
-        throw new Error("Failed to obtain access token");
+  // accessToken(code: string, code_verifier: string): Promise<TokenDetails> {
+  //   console.log("AccessToken Request:", {
+  //     code,
+  //     code_verifier,
+  //     redirect_uri: "http://localhost:4200",
+  //   });
+  //   return axios
+  //     .post<TokenDetails>(`${identityServiceUrl}/auth/token`, {
+  //       code,
+  //       code_verifier,
+  //       redirect_uri: "http://localhost:4200",
+  //     })
+  //     .then((response) => {
+  //       console.log("AccessToken Response:", response.data);
+  //       return response.data;
+  //     })
+  //     .catch((error) => {
+  //       console.error("AccessToken Error:", {
+  //         status: error.response?.status,
+  //         data: error.response?.data,
+  //         message: error.message,
+  //       });
+  //       throw new Error("Failed to obtain access token");
+  //     });
+  // },
+ async accessToken(code: string, code_verifier: string): Promise<TokenDetails> {
+    try {
+      const response = await axios.post<TokenDetails>(
+        `${identityServiceUrl}/auth/token`,
+        {
+          code,
+          code_verifier,
+          redirect_uri: "http://localhost:4200",
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("AccessToken Error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
       });
+      throw new Error("Failed to obtain access token");
+    }
   },
 
+//   accesssToken(code: string, code_verifier: string): Promise<TokenDetails> {
+//   const redirectUri = "http://localhost:4200";
+//   const clientId = "07bfba60-bbc5-42f1-994d-dc17db71b873";
+
+//   const params = new URLSearchParams();
+//   params.append("grant_type", "authorization_code");
+//   params.append("code", code);
+//   params.append("redirect_uri", redirectUri);
+//   params.append("code_verifier", code_verifier);
+//   params.append("client_id", clientId);
+
+//   return axios
+//     .post<TokenDetails>(`${identityServiceUrl}/auth/token`, params.toString(), {
+//       headers: {
+//         "Content-Type": "application/x-www-form-urlencoded",
+//       },
+//     })
+//     .then((response) => {
+//       console.log("✅ AccessToken Response:", response.data);
+//       return response.data;
+//     })
+//     .catch((error) => {
+//       console.error("❌ AccessToken Error:", {
+//         status: error.response?.status,
+//         headers: error.response?.headers,
+//         data: error.response?.data,
+//         message: error.message,
+//       });
+//       throw new Error("Failed to obtain access token");
+//     });
+// }
+// ,
   refreshToken(tokenDetails: TokenDetails): Promise<TokenDetails> {
     return axios
       .post<TokenDetails>(`${identityServiceUrl}/auth/refresh`, {
@@ -76,6 +147,11 @@ const AuthenticationService = {
       })
       .then((response) => response.data)
       .catch((error) => {
+        console.error("RefreshToken Error:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
         throw new Error("Failed to refresh token");
       });
   },
@@ -100,6 +176,10 @@ const AuthenticationService = {
     localStorage.setItem("currentUser", JSON.stringify(userDetails));
   },
 
+  removeCurrentUserValue(): void {
+    localStorage.removeItem("currentUser");
+  },
+
   getCurrentUserToken(): TokenDetails | null {
     return JSON.parse(
       localStorage.getItem("tokenDetails") || "{}"
@@ -110,37 +190,53 @@ const AuthenticationService = {
     localStorage.setItem("tokenDetails", JSON.stringify(tokenDetails));
   },
 
-  userDetails(username?: string): Promise<UserProfileDetail | null> {
-    if (!username) username = this.getCurrentUserValue()?.userName;
-    if (username) {
-      return axios
-        .get<UserProfileDetail>(`${resourceApiUrl}/users/username?username=${username}`)
-        .then((response) => {
-          this.setCurrentUserValue(response.data);
-          return response.data;
-        })
-        .catch((error) => {
-          throw new Error("Failed to fetch user details");
-        });
-    }
-    return Promise.resolve(null);
+  removeUserToken(): void {
+    localStorage.removeItem("tokenDetails");
   },
+
+  userDetails(username?: string): Promise<UserProfileDetail | null> {
+  if (!username) username = AuthenticationService.getCurrentUserValue()?.userName;
+  const token = AuthenticationService.getCurrentUserToken()?.access_token;
+
+  if (username && token) {
+    console.log(username);
+    return axios
+      .get<UserProfileDetail>(`${pApiUrl}/private/users/username?username=${username}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        AuthenticationService.setCurrentUserValue(response.data);
+        return response.data;
+      })
+      .catch((error) => {
+        console.error("UserDetails Error:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+        throw new Error("Failed to fetch user details");
+      });
+  }
+
+  return Promise.resolve(null);
+},
 
   initiateAuthFlow(userName: string): void {
     const codeVerifier = this.generateRandomString();
     const clientChallenge = this.generateCodeChallenge(codeVerifier);
-    const clientState = this.generateRandomString(10);
+    const clientState = this.generateRandomString(32);
     const nonce = this.generateRandomString(10);
     const scope = "openid api.read api.write";
     const url = identityServiceUrl.replace("8082", "9000");
 
     localStorage.setItem("codeVerifier", codeVerifier);
     localStorage.setItem("username", userName);
+    console.log("Stored in localStorage:", { codeVerifier, username: userName });
 
-    
-    const authorizationUrl = `${url}/oauth2/authorize?client_id=oidc-client&redirect_uri=${appId}&scope=${scope}&response_type=code&response_mode=query&code_challenge_method=S256&code_challenge=${clientChallenge}&state=${clientState}&nonce=${nonce}`;
-    console.log(authorizationUrl)
-    return
+    const authorizationUrl = `${url}/oauth2/authorize?client_id=oidc-client&redirect_uri=${this.appId}&scope=${scope}&response_type=code&response_mode=query&code_challenge_method=S256&code_challenge=${clientChallenge}&state=${clientState}&nonce=${nonce}`;
+    console.log("React Auth URL:", authorizationUrl);
     window.location.href = authorizationUrl;
   },
 
@@ -157,18 +253,24 @@ const AuthenticationService = {
   },
 
   generateCodeChallenge(codeVerifier: string): string {
-    return CryptoJS.SHA256(codeVerifier)
+    const challenge = CryptoJS.SHA256(codeVerifier)
       .toString(CryptoJS.enc.Base64)
       .replace(/=/g, "")
       .replace(/\+/g, "-")
       .replace(/\//g, "_");
+    console.log("codeVerifier:", codeVerifier, "codeChallenge:", challenge);
+    return challenge;
+  },
+
+  removeVerifier(): void {
+    localStorage.removeItem("codeVerifier");
+    localStorage.removeItem("username");
   },
 
   removeUserDetails(): void {
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("tokenDetails");
-    localStorage.removeItem("codeVerifier");
-    localStorage.removeItem("username");
+    this.removeCurrentUserValue();
+    this.removeUserToken();
+    this.removeVerifier();
   },
 
   registerUser(userPayload: RegisterUserDetail): Promise<any> {
@@ -176,11 +278,15 @@ const AuthenticationService = {
       .post(`${pApiUrl}/register`, userPayload, {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
       })
       .then((response) => response.data)
       .catch((error) => {
+        console.error("RegisterUser Error:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
         throw new Error("Failed to register user");
       });
   },
@@ -196,6 +302,11 @@ const AuthenticationService = {
       )
       .then((response) => response.data)
       .catch((error) => {
+        console.error("UpdatePassword Error:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
         throw new Error("Failed to update password");
       });
   },

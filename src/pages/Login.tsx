@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import AuthenticationService from "@/services/AuthenticationService";
-
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,19 +29,15 @@ const Login = () => {
   const [returnUrl, setReturnUrl] = useState("/dashboard");
 
   useEffect(() => {
-    // Logout logic
     AuthenticationService.removeUserDetails();
     localStorage.setItem("logout-event", "logout" + Math.random());
 
-    // Get return URL from query params
     const params = new URLSearchParams(location.search);
     const ret = params.get("returnUrl");
-    if (ret) {
-      setReturnUrl(decodeURIComponent(ret));
-    }
+    if (ret) setReturnUrl(decodeURIComponent(ret));
   }, [location]);
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setShowProgressBar(true);
     setInvalidLogin(false);
@@ -82,7 +77,7 @@ const Login = () => {
     }
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setShowProgressBar(true);
 
@@ -119,7 +114,7 @@ const Login = () => {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex ${isLogin ? "flex-row" : "flex-row-reverse"} items-center justify-center p-4 h-[78vh]`}>
-      {/* Hero Image Section */}
+      {/* Hero Image */}
       <div className="flex-[0.6] flex justify-center items-center m-[3%]">
         <motion.div
           className="w-full max-w-lg order-1 lg:order-2"
@@ -127,27 +122,21 @@ const Login = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5 }}
         >
-          <img
-            src="img/hero-img.png"
-            className="w-full h-auto"
-            alt="Hero"
-          />
+          <img src="img/hero-img.png" className="w-full h-auto" alt="Hero" />
         </motion.div>
       </div>
 
-      {/* Form Card Section */}
+      {/* Auth Card */}
       <div className="flex-[0.4] bg-gradient-to-b from-[#fbfcfd] to-white p-6 rounded-lg shadow-xl">
         {showProgressBar && (
-          <div className="h-1 bg-blue-100 rounded overflow-hidden mb-4">
-            <div className="h-full bg-blue-600 animate-pulse w-full"></div>
-          </div>
-        )}
-
-        {/* Bird Animation Placeholder */}
-        {showProgressBar && (
-          <div className="relative w-12 h-12 mb-4">
-            <div className="absolute w-4 h-4 bg-blue-400 rounded-full animate-bounce"></div>
-          </div>
+          <>
+            <div className="h-1 bg-blue-100 rounded overflow-hidden mb-4">
+              <div className="h-full bg-blue-600 animate-pulse w-full" />
+            </div>
+            <div className="relative w-12 h-12 mb-4">
+              <div className="absolute w-4 h-4 bg-blue-400 rounded-full animate-bounce" />
+            </div>
+          </>
         )}
 
         <div className="mb-8">
@@ -166,13 +155,9 @@ const Login = () => {
                 <span className="text-white font-bold text-lg">PT</span>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome to Pintailer
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome to Pintailer</h1>
             <p className="text-gray-600 mt-2">
-              {isLogin
-                ? "Sign in to your PinTailer account"
-                : "Register to get started"}
+              {isLogin ? "Sign in to your PinTailer account" : "Register to get started"}
             </p>
           </div>
         </div>
@@ -192,24 +177,20 @@ const Login = () => {
                     id="username"
                     placeholder="Enter username"
                     value={credentials.username}
-                    onChange={(e) =>
-                      setCredentials({ ...credentials, username: e.target.value })
-                    }
+                    onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
                     onKeyUp={(e) => e.key === "Enter" && handleLogin(e)}
                     required
                   />
                 </div>
 
                 {invalidLogin && (
-                  <p className="text-red-500 text-sm">
-                    Invalid username. Please try again.
-                  </p>
+                  <p className="text-red-500 text-sm">Invalid username. Please try again.</p>
                 )}
 
                 <Button
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700"
-                  disabled={!credentials.username}
+                  disabled={!credentials.username.trim()}
                 >
                   Sign In
                 </Button>
@@ -245,9 +226,7 @@ const Login = () => {
                       id="firstName"
                       placeholder="Enter first name"
                       value={registerForm.firstName}
-                      onChange={(e) =>
-                        setRegisterForm({ ...registerForm, firstName: e.target.value })
-                      }
+                      onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })}
                       required
                     />
                   </div>
@@ -257,9 +236,7 @@ const Login = () => {
                       id="lastName"
                       placeholder="Enter last name"
                       value={registerForm.lastName}
-                      onChange={(e) =>
-                        setRegisterForm({ ...registerForm, lastName: e.target.value })
-                      }
+                      onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })}
                       required
                     />
                   </div>
@@ -271,9 +248,7 @@ const Login = () => {
                     id="username"
                     placeholder="Enter username"
                     value={registerForm.username}
-                    onChange={(e) =>
-                      setRegisterForm({ ...registerForm, username: e.target.value })
-                    }
+                    onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
                     required
                   />
                 </div>
@@ -285,9 +260,7 @@ const Login = () => {
                     type="password"
                     placeholder="Enter password"
                     value={registerForm.password}
-                    onChange={(e) =>
-                      setRegisterForm({ ...registerForm, password: e.target.value })
-                    }
+                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                     required
                   />
                 </div>
@@ -299,9 +272,7 @@ const Login = () => {
                     type="email"
                     placeholder="Enter email"
                     value={registerForm.email}
-                    onChange={(e) =>
-                      setRegisterForm({ ...registerForm, email: e.target.value })
-                    }
+                    onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                     required
                   />
                 </div>
@@ -313,9 +284,7 @@ const Login = () => {
                     type="tel"
                     placeholder="Enter phone number"
                     value={registerForm.phoneNumber}
-                    onChange={(e) =>
-                      setRegisterForm({ ...registerForm, phoneNumber: e.target.value })
-                    }
+                    onChange={(e) => setRegisterForm({ ...registerForm, phoneNumber: e.target.value })}
                     required
                   />
                 </div>

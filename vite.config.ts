@@ -9,6 +9,12 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 4200,
   },
+   proxy: {
+    '/fwTestManagement': {
+      target: 'http://localhost:8081',
+      changeOrigin: true,
+    },
+  },
   plugins: [
     react(),
     mode === 'development' &&
